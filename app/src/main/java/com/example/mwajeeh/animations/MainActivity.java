@@ -32,11 +32,21 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /*
+        * getWindow()-retrieve the currrent window for the activity.
+        * requestFeature()- enable extended window feature.
+        * Window.FEATURE_CONTENT_TRANSITIONS- flag for requesting that window content should be animated
+        * by TransitionManager
+        */
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        
+        /* I do understand what this code does but Idk why its needed here */
         pager.setPageMargin((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
+        
+        /*Take a look at how the veiwPager works */
         pager.setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
@@ -61,15 +71,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         list = (RecyclerView) findViewById(R.id.list);
+        
+        //using the gridlayout with 3 columns.
         layoutManager = new GridLayoutManager(this, 3);
+        
+        //set this layout as the layout for the list
         list.setLayoutManager(layoutManager);
+        
+        //set the adapter for the recyclerView list
         list.setAdapter(new Adapter(LayoutInflater.from(this), Categories.getCategories()));
 
     }
 
+    /* the adapter that creates the list
+    *
+    */
 
     public class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private LayoutInflater inflater;
+        
+        //stores the liste items
         private final List<Categories.Category> items;
 
         public Adapter(LayoutInflater inflater, List<Categories.Category> items) {
@@ -86,7 +107,12 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.title.setText(items.get(position).title);
             holder.image.setImageResource(items.get(position).image);
+            
+            /* implementing the logic for what happens when an item is clicked 
+             * and launching detailedActivity using intent.
+             */
             holder.itemView.setOnClickListener(new View.OnClickListener() {
+              
                 @Override
                 public void onClick(View v) {
                     int adapterPosition = holder.getAdapterPosition();
@@ -97,15 +123,31 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(context, DetailActivity.class);
                     intent.putExtra("position", adapterPosition);
                     //// TODO: 25/04/2017 Use ActivityOptionsCompat to support pre-lollipop
+                    
+                    /* The following code retrieves the visible range of items in the list.
+                     * loops over each of these list items, get the associated view holder
+                     * get image for that position and add to the list of pair
+                     * pass that pair list to the TransitionAnimation
+                     */
+                     
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
                         int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
                         List<Pair<View, String>> pairs = new ArrayList<Pair<View, String>>();
                         for (int i = firstVisibleItemPosition; i <= lastVisibleItemPosition; i++) {
+                            
                             ViewHolder holderForAdapterPosition = (ViewHolder) list.findViewHolderForAdapterPosition(i);
                             View itemView = holderForAdapterPosition.image;
                             pairs.add(Pair.create(itemView, "tab_" + i));
                         }
+                        
+                        /*
+                        * makeSceneTransitionAnimation helps in creating the animation.
+                        * first argument is the activity whose window contains the shared elements.
+                        * the shared elements that are transferred to the target activity.
+                        * @ActivityOptions: Returns a new ActivityOptions object that you can use to supply these options as the options
+                        * Bundle when starting an activity.
+                        */
                         Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(MainActivity.this, pairs.toArray(new Pair[]{})).toBundle();
                         context.startActivity(intent, bundle);
                     } else {
